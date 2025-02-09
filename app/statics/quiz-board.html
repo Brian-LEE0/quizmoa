@@ -158,9 +158,9 @@
             const mediaContainer = document.getElementById('media');
             mediaContainer.innerHTML = "";
             if (mediaPath) {
-                if (mediaPath.match(/\.(jpeg|jpg|png|gif)$/)) {
+                if (mediaPath.match(/\.(jpeg|jpg|png|gif|webp|svg|bmp|ico|tiff|tif)$/)) {
                     mediaContainer.innerHTML = `<img src="/uploads/${mediaPath}" alt="문제 이미지">`;
-                } else if (mediaPath.match(/\.(mp4|webm)$/)) {
+                } else if (mediaPath.match(/\.(mp4|webm|mov|avi|mkv)$/)) {
                     mediaContainer.innerHTML = `<video controls src="/uploads/${mediaPath}"></video>`;
                 } else if (mediaPath.match(/\.(mp3|wav)$/)) {
                     mediaContainer.innerHTML = `<audio controls src="/uploads/${mediaPath}"></audio>`;
@@ -170,9 +170,9 @@
 
         function displayOptionMedia(mediaPath, container) {
             if (mediaPath) {
-                if (mediaPath.match(/\.(jpeg|jpg|png|gif)$/)) {
+                if (mediaPath.match(/\.(jpeg|jpg|png|gif|webp|svg|bmp|ico|tiff|tif)$/)) {
                     container.innerHTML += `<img src="/uploads/${mediaPath}" alt="옵션 이미지">`;
-                } else if (mediaPath.match(/\.(mp4|webm)$/)) {
+                } else if (mediaPath.match(/\.(mp4|webm|mov|avi|mkv)$/)) {
                     container.innerHTML += `<video controls src="/uploads/${mediaPath}"></video>`;
                 } else if (mediaPath.match(/\.(mp3|wav)$/)) {
                     container.innerHTML += `<audio controls src="/uploads/${mediaPath}"></audio>`;
