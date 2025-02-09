@@ -21,6 +21,7 @@ def __init_db():
                 question TEXT NOT NULL,
                 correct_answer TEXT NOT NULL,
                 main_file_path TEXT,
+                answer_main_file_path TEXT,
                 FOREIGN KEY (topic_id) REFERENCES topics(id)
             )
         ''')

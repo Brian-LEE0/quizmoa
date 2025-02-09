@@ -33,6 +33,7 @@
         }
         .media-container img, .media-container video, .media-container audio {
             max-width: 100%;
+            max-height: 500px;
             margin: 10px 0;
             border-radius: 8px;
         }
@@ -184,6 +185,8 @@
             correctAnswerElement.className = 'correct-answer';
             correctAnswerElement.innerText = `정답: ${quiz.correctAnswer}`;
             document.getElementById('options').appendChild(correctAnswerElement);
+
+            displayMedia(quiz.answerMainFilePath);
         
             // 객관식 문제일 경우 정답 옵션의 스타일 변경
             if (quiz.quizType === 'objective') {

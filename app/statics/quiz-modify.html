@@ -90,6 +90,16 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="question">답 설명 이미지/동영상/음성</label>
+            <input type="file" id="answerMainFile" accept="image/*, video/*, audio/*" onchange="previewAnswerMainMedia(event)">
+            <div id="answerMainMediaPreview" style="display:none;">
+                <img id="answerImagePreview" style="display:none; max-width: 100%;">
+                <video id="answerVideoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="answerAudioPreview" style="display:none; width: 100%;" controls></audio>
+            </div>
+        </div>
+
         <!-- 주관식 문제 추가 -->
         <div id="subjectiveOptions" class="form-group" style="display:none;">
             <label for="answer">답</label>
@@ -277,6 +287,45 @@
             }
         }
 
+        // 답 설명 미디어 미리보기
+        function previewAnswerMainMedia(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('answerMainMediaPreview');
+            const imagePreview = document.getElementById('answerImagePreview');
+            const videoPreview = document.getElementById('answerVideoPreview');
+            const audioPreview = document.getElementById('answerAudioPreview');
+        
+            // 모든 미리보기 요소 숨기기
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            audioPreview.style.display = 'none';
+        
+            if (file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+        
+                if (fileType === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    const url = URL.createObjectURL(file);
+                    videoPreview.src = url;
+                    videoPreview.style.display = 'block';
+                } else if (fileType === 'audio') {
+                    const url = URL.createObjectURL(file);
+                    audioPreview.src = url;
+                    audioPreview.style.display = 'block';
+                }
+        
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
         async function uploadFile(image){
             const formData = new FormData();
             formData.append('image', image);
@@ -304,6 +353,13 @@
                 const mainFilePath = await uploadFile(mainFile);
                 formData.append('mainFilePath', mainFilePath);
             }
+
+            const answerMainFile = document.getElementById('answerMainFile').files[0];
+            if (answerMainFile) {
+                const answerMainFilePath = await uploadFile(answerMainFile);
+                formData.append('answerMainFilePath', answerMainFilePath);
+            }
+
 
             if (quizType === 'subjective') {
                 const answer = document.getElementById('answer').value;
@@ -411,6 +467,40 @@
                     } else if (quiz.mainFilePath.endsWith('.mp3') || quiz.mainFilePath.endsWith('.wav')) {
                         audioPreview.style.display = 'block';
                         audioPreview.src = URL.createObjectURL(file);
+                    }
+                }
+
+                if (quiz.answerMainFilePath) {
+                    const answerMainMediaPreview = document.getElementById('answerMainMediaPreview');
+                    const answerImagePreview = document.getElementById('answerImagePreview');
+                    const answerVideoPreview = document.getElementById('answerVideoPreview');
+                    const answerAudioPreview = document.getElementById('answerAudioPreview');
+
+                    answerMainMediaPreview.style.display = 'block';
+                    const response = await fetch("/uploads/" + quiz.answerMainFilePath);
+                    const blob = await response.blob();
+                    const fileName = quiz.answerMainFilePath.split('/').pop();  // 파일 이름 추출
+
+                    // Blob을 File로 변환
+                    const file = new File([blob], fileName, { type: blob.type });
+
+                    // DataTransfer 객체를 사용해 FileList 생성
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    // 파일 input에 FileList 할당
+                    const answerMainFile = document.getElementById('answerMainFile');
+                    answerMainFile.files = dataTransfer.files;
+
+                    if (quiz.answerMainFilePath.endsWith('.jpg') || quiz.answerMainFilePath.endsWith('.jpeg') || quiz.answerMainFilePath.endsWith('.png')) {
+                        answerImagePreview.style.display = 'block';
+                        answerImagePreview.src = URL.createObjectURL(file);
+                    } else if (quiz.answerMainFilePath.endsWith('.mp4') || quiz.answerMainFilePath.endsWith('.webm')) {
+                        answerVideoPreview.style.display = 'block';
+                        answerVideoPreview.src = URL.createObjectURL(file);
+                    } else if (quiz.answerMainFilePath.endsWith('.mp3') || quiz.answerMainFilePath.endsWith('.wav')) {
+                        answerAudioPreview.style.display = 'block';
+                        answerAudioPreview.src = URL.createObjectURL(file);
                     }
                 }
 

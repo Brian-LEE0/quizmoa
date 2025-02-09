@@ -81,7 +81,7 @@
         </div>
 
         <div class="form-group">
-            <label for="question">메인 이미지/동영상/음성</label>
+            <label for="question">문제 설명 이미지/동영상/음성</label>
             <input type="file" id="mainFile" accept="image/*, video/*, audio/*" onchange="previewMainMedia(event)">
             <div id="mainMediaPreview" style="display:none;">
                 <img id="imagePreview" style="display:none; max-width: 100%;">
@@ -89,6 +89,17 @@
                 <audio id="audioPreview" style="display:none; width: 100%;" controls></audio>
             </div>
         </div>
+
+        <div class="form-group">
+            <label for="question">답 설명 이미지/동영상/음성</label>
+            <input type="file" id="answerMainFile" accept="image/*, video/*, audio/*" onchange="previewAnswerMainMedia(event)">
+            <div id="answerMainMediaPreview" style="display:none;">
+                <img id="answerImagePreview" style="display:none; max-width: 100%;">
+                <video id="answerVideoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="answerAudioPreview" style="display:none; width: 100%;" controls></audio>
+            </div>
+        </div>
+
 
         <!-- 주관식 문제 추가 -->
         <div id="subjectiveOptions" class="form-group" style="display:none;">
@@ -277,6 +288,45 @@
             }
         }
 
+        // 답 미디어 미리보기
+        function previewAnswerMainMedia(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('answerMainMediaPreview');
+            const imagePreview = document.getElementById('answerImagePreview');
+            const videoPreview = document.getElementById('answerVideoPreview');
+            const audioPreview = document.getElementById('answerAudioPreview');
+        
+            // 모든 미리보기 요소 숨기기
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            audioPreview.style.display = 'none';
+        
+            if (file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+        
+                if (fileType === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    const url = URL.createObjectURL(file);
+                    videoPreview.src = url;
+                    videoPreview.style.display = 'block';
+                } else if (fileType === 'audio') {
+                    const url = URL.createObjectURL(file);
+                    audioPreview.src = url;
+                    audioPreview.style.display = 'block';
+                }
+        
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
         async function uploadFile(image){
             const formData = new FormData();
             formData.append('image', image);
@@ -302,6 +352,12 @@
             if (mainFile) {
                 const mainFilePath = await uploadFile(mainFile);
                 formData.append('mainFilePath', mainFilePath);
+            }
+
+            const answerMainFile = document.getElementById('answerMainFile').files[0];
+            if (answerMainFile) {
+                const answerMainFilePath = await uploadFile(answerMainFile);
+                formData.append('answerMainFilePath', answerMainFilePath);
             }
 
             if (quizType === 'subjective') {

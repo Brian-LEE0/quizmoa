@@ -73,12 +73,12 @@ async def get_quizzes(topic_id: int):
     if not topic:
         raise HTTPException(status_code=404, detail="주제를 찾을 수 없습니다.")
 
-    cursor.execute("SELECT id, idx, quiz_type, question, correct_answer, main_file_path FROM quizzes WHERE topic_id = ? ORDER BY idx ASC", (topic_id,))
+    cursor.execute("SELECT id, idx, quiz_type, question, correct_answer, main_file_path, answer_main_file_path FROM quizzes WHERE topic_id = ? ORDER BY idx ASC", (topic_id,))
     quizzes = cursor.fetchall()
 
     quiz_list = []
     for quiz in quizzes:
-        quiz_id, idx, quiz_type, question, correct_answer, main_file_path = quiz
+        quiz_id, idx, quiz_type, question, correct_answer, main_file_path, answer_main_file_path = quiz
         
         
         options_text = []
@@ -96,6 +96,7 @@ async def get_quizzes(topic_id: int):
             "question": question,
             "mainFilePath": main_file_path,
             "correctAnswer": correct_answer,
+            "answerMainFilePath": answer_main_file_path,
             "optionsText": options_text,
             "optionsImagePath": options_image_path
         })
@@ -112,12 +113,12 @@ async def get_quiz(topic_id: int, quiz_id: int):
     if not topic:
         raise HTTPException(status_code=404, detail="주제를 찾을 수 없습니다.")
 
-    cursor.execute("SELECT idx, quiz_type, question, correct_answer, main_file_path FROM quizzes WHERE id = ? AND topic_id = ?", (quiz_id, topic_id))
+    cursor.execute("SELECT idx, quiz_type, question, correct_answer, main_file_path, answer_main_file_path FROM quizzes WHERE id = ? AND topic_id = ?", (quiz_id, topic_id))
     quiz = cursor.fetchone()
     if not quiz:
         raise HTTPException(status_code=404, detail="퀴즈를 찾을 수 없습니다.")
 
-    idx, quiz_type, question, correct_answer, main_file_path = quiz
+    idx, quiz_type, question, correct_answer, main_file_path, answer_main_file_path = quiz
     options = []
 
     cursor.execute("SELECT text, image_path FROM options WHERE quiz_id = ?", (quiz_id,))
@@ -131,6 +132,7 @@ async def get_quiz(topic_id: int, quiz_id: int):
         "question": question,
         "correctAnswer": correct_answer,
         "mainFilePath": main_file_path,
+        "answerMainFilePath": answer_main_file_path,
         "optionsText": optionsText,
         "optionsImagePath": optionsImagePath
     })
@@ -144,6 +146,7 @@ async def upload_quiz(
     question: str = Form(...),
     correctAnswer: str = Form(...),
     mainFilePath: Optional[str] = Form(None),
+    answerMainFilePath: Optional[str] = Form(None),
     optionsText: Optional[str] = Form(None),
     optionsImagePath: Optional[str] = Form(None)
 ):
@@ -177,8 +180,8 @@ async def upload_quiz(
         
         # 퀴즈 삽입
         cursor.execute(
-            "INSERT INTO quizzes (idx, topic_id, quiz_type, question, correct_answer, main_file_path) VALUES (?, ?, ?, ?, ?, ?)",
-            (idx, topic_id, quizType, question, correctAnswer, mainFilePath)
+            "INSERT INTO quizzes (idx, topic_id, quiz_type, question, correct_answer, main_file_path, answer_main_file_path) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (idx, topic_id, quizType, question, correctAnswer, mainFilePath, answerMainFilePath)
         )
         quiz_id = cursor.lastrowid
 
@@ -202,6 +205,7 @@ async def update_quiz(
     question: str = Form(...),
     correctAnswer: str = Form(...),
     mainFilePath: Optional[str] = Form(None),
+    answerMainFilePath: Optional[str] = Form(None),
     optionsText: Optional[str] = Form(None),
     optionsImagePath: Optional[str] = Form(None),
 ):
@@ -231,8 +235,8 @@ async def update_quiz(
 
     # 퀴즈 업데이트
     cursor.execute(
-        "UPDATE quizzes SET quiz_type = ?, question = ?, correct_answer = ?, main_file_path = ? WHERE id = ?",
-        (quizType, question, correctAnswer, mainFilePath, quiz_id)
+        "UPDATE quizzes SET quiz_type = ?, question = ?, correct_answer = ?, main_file_path = ?, answer_main_file_path = ? WHERE id = ?",
+        (quizType, question, correctAnswer, mainFilePath, answerMainFilePath, quiz_id)
     )
 
     # 기존 옵션 삭제
