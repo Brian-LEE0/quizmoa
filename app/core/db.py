@@ -1,7 +1,7 @@
 import sqlite3
 
 # SQLite 데이터베이스 설정
-DB_NAME = "quiz.db"
+DB_NAME = "/var/tmp/quiz.db"
 
 def __init_db():
     with sqlite3.connect(DB_NAME) as conn:

@@ -56,9 +56,8 @@
         input[type="file"] {
             margin-left: 10px;
         }
-        
-        .image-preview, .video-preview, .audio-preview {
-            max-width: 50%;
+        .image-preview {
+            max-width: 100px;
             margin-top: 10px;
         }
     </style>
@@ -85,9 +84,9 @@
             <label for="question">메인 이미지/동영상/음성</label>
             <input type="file" id="mainFile" accept="image/*, video/*, audio/*" onchange="previewMainMedia(event)">
             <div id="mainMediaPreview" style="display:none;">
-                <img id="imagePreview" class="image-preview" style="display:none; max-width: 100%;">
-                <video id="videoPreview" class="video-preview" style="display:none; max-width: 100%;" controls></video>
-                <audio id="audioPreview" class="audio-preview" style="display:none; width: 100%;" controls></audio>
+                <img id="imagePreview" style="display:none; max-width: 100%;">
+                <video id="videoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="audioPreview" style="display:none; width: 100%;" controls></audio>
             </div>
         </div>
 
@@ -98,9 +97,9 @@
             <label for="subjectiveImage">이미지 (주관식 문제에도 이미지 추가 가능)</label>
             <input type="file" id="subjectiveImage" accept="image/*, video/*" onchange="previewSubjectiveMedia(event)">
             <div id="subjectiveMediaPreview" style="display:none;">
-                <img id="imagePreview" style="display:none; max-width: 100%;">
-                <video id="videoPreview" style="display:none; max-width: 100%;" controls></video>
-                <audio id="audioPreview" style="display:none; width: 100%;" controls></audio>
+                <img id="subjectiveImagePreview" style="display:none; max-width: 100%;">
+                <video id="subjectiveVideoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="subjectiveAudioPreview" style="display:none; width: 100%;" controls></audio>
             </div>
         </div>
 
@@ -114,7 +113,7 @@
         </div>
 
         <div class="form-group">
-            <button onclick="createQuiz()">문제 수정</button>
+            <button onclick="createQuiz()">문제 생성</button>
         </div>
     </div>
 
@@ -159,7 +158,7 @@
                 <input type="text" class="optionText" placeholder="옵션을 입력하세요" required>
                 <input type="radio" name="correctOption" class="correctOption" value="${optionCount}">
                 <input type="file" class="optionImage" accept="image/*, video/*" onchange="previewMedia(event, ${optionCount})">
-                <div class="MediaPreview" style="display:none;">
+                <div class="image-preview">
                     <img id="imagePreview${optionCount}" style="display:none; max-width: 100%;">
                     <video id="videoPreview${optionCount}" style="display:none; max-width: 100%;" controls></video>
                     <audio id="audioPreview${optionCount}" style="display:none; width: 100%;" controls></audio>
@@ -174,30 +173,36 @@
             const file = event.target.files[0];
             const reader = new FileReader();
             const mediaPreview = document.getElementById('subjectiveMediaPreview');
-            const imagePreview = document.getElementById('imagePreview');
-            const videoPreview = document.getElementById('videoPreview');
-            const audioPreview = document.getElementById('audioPreview');
+            const imagePreview = document.getElementById('subjectiveImagePreview');
+            const videoPreview = document.getElementById('subjectiveVideoPreview');
+            const audioPreview = document.getElementById('subjectiveAudioPreview');
             
             // 기존 미리보기 초기화
             imagePreview.style.display = 'none';
             videoPreview.style.display = 'none';
             audioPreview.style.display = 'none';
 
-            reader.onload = function() {
-                if (file.type.startsWith('image/')) {
-                    // 이미지 파일인 경우
-                    imagePreview.style.display = 'block';
-                    imagePreview.src = reader.result;
-                } else if (file.type.startsWith('video/')) {
-                    // 비디오 파일인 경우
+            if (file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+
+                if (fileType === 'image') {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    videoPreview.src = URL.createObjectURL(file);
                     videoPreview.style.display = 'block';
-                    videoPreview.src = reader.result;
-                } else if (file.type.startsWith('audio/')) {
-                    // 오디오 파일인 경우
+                } else if (fileType === 'audio') {
+                    audioPreview.src = URL.createObjectURL(file);
                     audioPreview.style.display = 'block';
-                    audioPreview.src = reader.result;
                 }
-            };
+
+                mediaPreview.style.display = 'block';
+            } else {
+                mediaPreview.style.display = 'none';
+            }
         }
 
         // 객관식 이미지 미리보기
@@ -213,21 +218,24 @@
             videoPreview.style.display = 'none';
             audioPreview.style.display = 'none';
 
-            reader.onload = function() {
-                if (file.type.startsWith('image/')) {
-                    // 이미지 파일인 경우
-                    imagePreview.style.display = 'block';
-                    imagePreview.src = reader.result;
-                } else if (file.type.startsWith('video/')) {
-                    // 비디오 파일인 경우
+            if(file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+                console.log(fileType);
+
+                if (fileType === 'image') {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    videoPreview.src = URL.createObjectURL(file);
                     videoPreview.style.display = 'block';
-                    videoPreview.src = reader.result;
-                } else if (file.type.startsWith('audio/')) {
-                    // 오디오 파일인 경우
+                } else if (fileType === 'audio') {
+                    audioPreview.src = URL.createObjectURL(file);
                     audioPreview.style.display = 'block';
-                    audioPreview.src = reader.result;
                 }
-            };
+            }
         }
 
         // 메인 미디어 미리보기
@@ -290,7 +298,6 @@
 
             formData.append('quizType', quizType);
             formData.append('question', question);
-
             const mainFile = document.getElementById('mainFile').files[0];
             if (mainFile) {
                 const mainFilePath = await uploadFile(mainFile);
@@ -357,7 +364,7 @@
             const data = await response.json();
             if (response.ok) {
                 alert('문제가 성공적으로 생성되었습니다.');
-                //window.location.href = '/topic-management';  // 주제 관리 페이지로 돌아가기
+                window.location.href = '/topic-management';  // 주제 관리 페이지로 돌아가기
             } else {
                 alert(data.detail || '문제 생성에 실패했습니다.');
             }

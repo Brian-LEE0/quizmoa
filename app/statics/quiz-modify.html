@@ -97,9 +97,9 @@
             <label for="subjectiveImage">이미지 (주관식 문제에도 이미지 추가 가능)</label>
             <input type="file" id="subjectiveImage" accept="image/*, video/*" onchange="previewSubjectiveMedia(event)">
             <div id="subjectiveMediaPreview" style="display:none;">
-                <img id="imagePreview" style="display:none; max-width: 100%;">
-                <video id="videoPreview" style="display:none; max-width: 100%;" controls></video>
-                <audio id="audioPreview" style="display:none; width: 100%;" controls></audio>
+                <img id="subjectiveImagePreview" style="display:none; max-width: 100%;">
+                <video id="subjectiveVideoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="subjectiveAudioPreview" style="display:none; width: 100%;" controls></audio>
             </div>
         </div>
 
@@ -113,7 +113,7 @@
         </div>
 
         <div class="form-group">
-            <button onclick="createQuiz()">문제 수정</button>
+            <button onclick="updateQuiz()">문제 수정</button>
         </div>
     </div>
 
@@ -173,30 +173,36 @@
             const file = event.target.files[0];
             const reader = new FileReader();
             const mediaPreview = document.getElementById('subjectiveMediaPreview');
-            const imagePreview = document.getElementById('imagePreview');
-            const videoPreview = document.getElementById('videoPreview');
-            const audioPreview = document.getElementById('audioPreview');
+            const imagePreview = document.getElementById('subjectiveImagePreview');
+            const videoPreview = document.getElementById('subjectiveVideoPreview');
+            const audioPreview = document.getElementById('subjectiveAudioPreview');
             
             // 기존 미리보기 초기화
             imagePreview.style.display = 'none';
             videoPreview.style.display = 'none';
             audioPreview.style.display = 'none';
 
-            reader.onload = function() {
-                if (file.type.startsWith('image/')) {
-                    // 이미지 파일인 경우
-                    imagePreview.style.display = 'block';
-                    imagePreview.src = reader.result;
-                } else if (file.type.startsWith('video/')) {
-                    // 비디오 파일인 경우
+            if (file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+
+                if (fileType === 'image') {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    videoPreview.src = URL.createObjectURL(file);
                     videoPreview.style.display = 'block';
-                    videoPreview.src = reader.result;
-                } else if (file.type.startsWith('audio/')) {
-                    // 오디오 파일인 경우
+                } else if (fileType === 'audio') {
+                    audioPreview.src = URL.createObjectURL(file);
                     audioPreview.style.display = 'block';
-                    audioPreview.src = reader.result;
                 }
-            };
+
+                mediaPreview.style.display = 'block';
+            } else {
+                mediaPreview.style.display = 'none';
+            }
         }
 
         // 객관식 이미지 미리보기
@@ -212,21 +218,24 @@
             videoPreview.style.display = 'none';
             audioPreview.style.display = 'none';
 
-            reader.onload = function() {
-                if (file.type.startsWith('image/')) {
-                    // 이미지 파일인 경우
-                    imagePreview.style.display = 'block';
-                    imagePreview.src = reader.result;
-                } else if (file.type.startsWith('video/')) {
-                    // 비디오 파일인 경우
+            if(file) {
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+                console.log(fileType);
+
+                if (fileType === 'image') {
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    videoPreview.src = URL.createObjectURL(file);
                     videoPreview.style.display = 'block';
-                    videoPreview.src = reader.result;
-                } else if (file.type.startsWith('audio/')) {
-                    // 오디오 파일인 경우
+                } else if (fileType === 'audio') {
+                    audioPreview.src = URL.createObjectURL(file);
                     audioPreview.style.display = 'block';
-                    audioPreview.src = reader.result;
                 }
-            };
+            }
         }
 
         // 메인 미디어 미리보기
@@ -276,11 +285,11 @@
                 body: formData,
             });
             const data = await response.json();
-            return data.image_path;
+            return data.image_name;
         }
 
         // 문제 생성 함수
-        async function createQuiz() {
+        async function updateQuiz() {
             const urlParams = new URLSearchParams(window.location.search);
             const topicId = urlParams.get('topicId');
             const quizType = document.getElementById('quizType').value;
@@ -290,6 +299,7 @@
             formData.append('quizType', quizType);
             formData.append('question', question);
             const mainFile = document.getElementById('mainFile').files[0];
+            console.log(mainFile);
             if (mainFile) {
                 const mainFilePath = await uploadFile(mainFile);
                 formData.append('mainFilePath', mainFilePath);
@@ -347,7 +357,7 @@
                 formData.append('optionsImagePath', JSON.stringify(optionsImagePath));
             }
 
-            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes`, {
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes/${quizId}`, {
                 method: 'PUT',
                 body: formData,
             });
@@ -370,12 +380,75 @@
                 document.getElementById('quizType').value = quiz.quizType;
                 document.getElementById('question').value = quiz.question;
 
+                if (quiz.mainFilePath) {
+                    const mainMediaPreview = document.getElementById('mainMediaPreview');
+                    const imagePreview = document.getElementById('imagePreview');
+                    const videoPreview = document.getElementById('videoPreview');
+                    const audioPreview = document.getElementById('audioPreview');
+
+                    mainMediaPreview.style.display = 'block';
+                    const response = await fetch("/uploads/" + quiz.mainFilePath);
+                    const blob = await response.blob();
+                    const fileName = quiz.mainFilePath.split('/').pop();  // 파일 이름 추출
+                    
+                    // Blob을 File로 변환
+                    const file = new File([blob], fileName, { type: blob.type });
+
+                    // DataTransfer 객체를 사용해 FileList 생성
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    // 파일 input에 FileList 할당
+                    const mainFile = document.getElementById('mainFile');
+                    mainFile.files = dataTransfer.files;
+
+                    if (quiz.mainFilePath.endsWith('.jpg') || quiz.mainFilePath.endsWith('.jpeg') || quiz.mainFilePath.endsWith('.png')) {
+                        imagePreview.style.display = 'block';
+                        imagePreview.src = URL.createObjectURL(file);
+                    } else if (quiz.mainFilePath.endsWith('.mp4') || quiz.mainFilePath.endsWith('.webm')) {
+                        videoPreview.style.display = 'block';
+                        videoPreview.src = URL.createObjectURL(file);
+                    } else if (quiz.mainFilePath.endsWith('.mp3') || quiz.mainFilePath.endsWith('.wav')) {
+                        audioPreview.style.display = 'block';
+                        audioPreview.src = URL.createObjectURL(file);
+                    }
+                }
+
                 if (quiz.quizType === 'subjective') {
                     document.getElementById('answer').value = quiz.correctAnswer;
                     if (quiz.optionsImagePath) {
+                        const subjectiveMediaPreview = document.getElementById('subjectiveMediaPreview');
                         const imagePreview = document.getElementById('subjectiveImagePreview');
-                        imagePreview.style.display = 'block';
-                        imagePreview.src = quiz.optionsImagePath[0]
+                        const videoPreview = document.getElementById('subjectiveVideoPreview');
+                        const audioPreview = document.getElementById('subjectiveAudioPreview');
+
+                        subjectiveMediaPreview.style.display = 'block';
+                        const response = await fetch("/uploads/" +quiz.optionsImagePath[0]);
+                        const blob = await response.blob();
+                        const fileName = quiz.optionsImagePath[0].split('/').pop();  // 파일 이름 추출
+
+                        // Blob을 File로 변환
+                        const file = new File([blob], fileName, { type: blob.type });
+
+                        // DataTransfer 객체를 사용해 FileList 생성
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+
+                        // 파일 input에 FileList 할당
+                        const subjectiveImage = document.getElementById('subjectiveImage');
+                        subjectiveImage.files = dataTransfer.files;
+
+                        if (quiz.optionsImagePath[0].endsWith('.jpg') || quiz.optionsImagePath[0].endsWith('.jpeg') || quiz.optionsImagePath[0].endsWith('.png')) {
+                            imagePreview.style.display = 'block';
+                            imagePreview.src = URL.createObjectURL(file);
+                        } else if (quiz.optionsImagePath[0].endsWith('.mp4') || quiz.optionsImagePath[0].endsWith('.webm')) {
+                            videoPreview.style.display = 'block';
+                            videoPreview.src = URL.createObjectURL(file);
+                        } else if (quiz.optionsImagePath[0].endsWith('.mp3') || quiz.optionsImagePath[0].endsWith('.wav')) {
+                            audioPreview.style.display = 'block';
+                            audioPreview.src = URL.createObjectURL(file);
+                        }
+
                     }
                 } else if (quiz.quizType === 'objective') {
                     for (let i = 0; i < quiz.optionsText.length; i++) {
@@ -384,10 +457,35 @@
                         if (quiz.correctAnswer === quiz.optionsText[i]) {
                             document.querySelectorAll('.correctOption')[i].checked = true;
                         }
-                        if (quiz.optionsImagePath[i]) {
-                            const imagePreview = document.getElementById(`imagePreview${i}`);
+
+                        const response = await fetch("/uploads/" +quiz.optionsImagePath[i]);
+                        const blob = await response.blob();
+                        const fileName = quiz.optionsImagePath[i].split('/').pop();  // 파일 이름 추출
+
+                        // Blob을 File로 변환
+                        const file = new File([blob], fileName, { type: blob.type });
+
+                        // DataTransfer 객체를 사용해 FileList 생성
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+
+                        // 파일 input에 FileList 할당
+                        const optionImage = document.querySelectorAll('.optionImage')[i];
+                        optionImage.files = dataTransfer.files;
+
+                        const imagePreview = document.getElementById(`imagePreview${i}`);
+                        const videoPreview = document.getElementById(`videoPreview${i}`);
+                        const audioPreview = document.getElementById(`audioPreview${i}`);
+
+                        if (quiz.optionsImagePath[i].endsWith('.jpg') || quiz.optionsImagePath[i].endsWith('.jpeg') || quiz.optionsImagePath[i].endsWith('.png')) {
                             imagePreview.style.display = 'block';
-                            imagePreview.src = quiz.optionsImagePath[i];
+                            imagePreview.src = URL.createObjectURL(file);
+                        } else if (quiz.optionsImagePath[i].endsWith('.mp4') || quiz.optionsImagePath[i].endsWith('.webm')) {
+                            videoPreview.style.display = 'block';
+                            videoPreview.src = URL.createObjectURL(file);
+                        } else if (quiz.optionsImagePath[i].endsWith('.mp3') || quiz.optionsImagePath[i].endsWith('.wav')) {
+                            audioPreview.style.display = 'block';
+                            audioPreview.src = URL.createObjectURL(file);
                         }
                     }
                 }

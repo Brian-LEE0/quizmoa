@@ -12,7 +12,7 @@ from app.core.db import get_engine
 router = APIRouter()
 
 # 업로드된 파일을 저장할 디렉토리 설정
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = "/var/tmp/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class Topic(BaseModel):
@@ -192,13 +192,12 @@ async def upload_quiz(
 async def update_quiz(
     topic_id: int,
     quiz_id: int,
-    idx: Optional[int] = Form(None),
     quizType: str = Form(...),
     question: str = Form(...),
     correctAnswer: str = Form(...),
-    MainFilePath: Optional[str] = Form(None),
-    optionsText: Optional[str] = Body(None),
-    optionsImagePath: Optional[str] = Body(None)
+    mainFilePath: Optional[str] = Form(None),
+    optionsText: Optional[str] = Form(None),
+    optionsImagePath: Optional[str] = Form(None),
 ):
     # json unmarsal
     if optionsText is not None:
@@ -226,8 +225,8 @@ async def update_quiz(
 
     # 퀴즈 업데이트
     cursor.execute(
-        "UPDATE quizzes SET idx = ?, quiz_type = ?, question = ?, correct_answer = ?, main_file_path = ? WHERE id = ?",
-        (idx, quizType, question, correctAnswer, MainFilePath, quiz_id)
+        "UPDATE quizzes SET quiz_type = ?, question = ?, correct_answer = ?, main_file_path = ? WHERE id = ?",
+        (quizType, question, correctAnswer, mainFilePath, quiz_id)
     )
 
     # 기존 옵션 삭제
@@ -286,7 +285,10 @@ def delete_quiz(topic_id: int, quiz_id: int):
 
 @router.post("/files")
 async def upload_image(image: UploadFile = File(...)):
-    image_path = f"{UPLOAD_DIR}/{datetime.datetime.now()}{image.filename}"
+    #get extension
+    extension = image.filename.split(".")[-1]
+    image_filename = f"{int(datetime.datetime.now().timestamp() * 1000)}.{extension}"
+    image_path = f"{UPLOAD_DIR}/{image_filename}"
     with open(image_path, "wb") as f:
         f.write(image.file.read())
-    return JSONResponse(content={"message": "이미지가 성공적으로 업로드되었습니다.", "image_path": image_path})
+    return JSONResponse(content={"message": "이미지가 성공적으로 업로드되었습니다.", "image_name": image_filename})

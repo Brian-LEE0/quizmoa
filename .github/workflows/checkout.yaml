@@ -42,7 +42,7 @@ jobs:
           script: |
             cd ~/quiz-moa-server
             docker build -t quiz-moa-server .
-            docker run --network=host -d --restart=always --name quiz-moa-server quiz-moa-server
+            docker run --network=host -d --restart=always -v /var/tmp:/var/tmp --name quiz-moa-server quiz-moa-server
 
             
 

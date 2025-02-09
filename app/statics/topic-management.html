@@ -156,6 +156,11 @@
             const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes`);
             const data = await response.json();
 
+            // querystring topicid 바꾸기
+            const url = new URL(window.location.href);
+            url.searchParams.set('topicId', topicId);
+            window.history.pushState({}, '', url);
+
             const quizListBody = document.getElementById('quizListBody');
             const quizList = document.getElementById('quizList');
             quizListBody.innerHTML = '';
@@ -276,6 +281,12 @@
         // 페이지 로드 시 주제 리스트를 가져옴
         window.onload = function() {
             getTopics();
+            // querystring topicid 가져오기
+            const url = new URL(window.location.href);
+            const topicId = url.searchParams.get('topicId');
+            if (topicId) {
+                getQuizzes(topicId);
+            }
         };
     </script>
 
