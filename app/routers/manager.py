@@ -106,12 +106,12 @@ async def get_quiz(topic_id: int, quiz_id: int):
     if not topic:
         raise HTTPException(status_code=404, detail="주제를 찾을 수 없습니다.")
 
-    cursor.execute("SELECT idx, quiz_type, question, correct_answer FROM quizzes WHERE id = ? AND topic_id = ?", (quiz_id, topic_id))
+    cursor.execute("SELECT idx, quiz_type, question, correct_answer, main_file_path FROM quizzes WHERE id = ? AND topic_id = ?", (quiz_id, topic_id))
     quiz = cursor.fetchone()
     if not quiz:
         raise HTTPException(status_code=404, detail="퀴즈를 찾을 수 없습니다.")
 
-    idx, quiz_type, question, correct_answer = quiz
+    idx, quiz_type, question, correct_answer, main_file_path = quiz
     options = []
 
     cursor.execute("SELECT text, image_path FROM options WHERE quiz_id = ?", (quiz_id,))
@@ -124,6 +124,7 @@ async def get_quiz(topic_id: int, quiz_id: int):
         "quizType": quiz_type,
         "question": question,
         "correctAnswer": correct_answer,
+        "mainFilePath": main_file_path,
         "optionsText": optionsText,
         "optionsImagePath": optionsImagePath
     })
@@ -136,8 +137,9 @@ async def upload_quiz(
     quizType: str = Form(...),
     question: str = Form(...),
     correctAnswer: str = Form(...),
-    optionsText: Optional[str] = Body(None),
-    optionsImagePath: Optional[str] = Body(None)
+    mainFilePath: Optional[str] = Form(None),
+    optionsText: Optional[str] = Form(None),
+    optionsImagePath: Optional[str] = Form(None)
 ):
     print(optionsText)
     # json unmarsal
@@ -169,8 +171,8 @@ async def upload_quiz(
         
         # 퀴즈 삽입
         cursor.execute(
-            "INSERT INTO quizzes (idx, topic_id, quiz_type, question, correct_answer) VALUES (?, ?, ?, ?, ?)",
-            (idx, topic_id, quizType, question, correctAnswer)
+            "INSERT INTO quizzes (idx, topic_id, quiz_type, question, correct_answer, main_file_path) VALUES (?, ?, ?, ?, ?, ?)",
+            (idx, topic_id, quizType, question, correctAnswer, mainFilePath)
         )
         quiz_id = cursor.lastrowid
 
@@ -194,6 +196,7 @@ async def update_quiz(
     quizType: str = Form(...),
     question: str = Form(...),
     correctAnswer: str = Form(...),
+    MainFilePath: Optional[str] = Form(None),
     optionsText: Optional[str] = Body(None),
     optionsImagePath: Optional[str] = Body(None)
 ):
@@ -223,8 +226,8 @@ async def update_quiz(
 
     # 퀴즈 업데이트
     cursor.execute(
-        "UPDATE quizzes SET idx = ?, quiz_type = ?, question = ?, correct_answer = ? WHERE id = ?",
-        (idx, quizType, question, correctAnswer, quiz_id)
+        "UPDATE quizzes SET idx = ?, quiz_type = ?, question = ?, correct_answer = ?, main_file_path = ? WHERE id = ?",
+        (idx, quizType, question, correctAnswer, MainFilePath, quiz_id)
     )
 
     # 기존 옵션 삭제
@@ -281,7 +284,7 @@ def delete_quiz(topic_id: int, quiz_id: int):
 
     return JSONResponse(content={"message": "퀴즈가 성공적으로 삭제되었습니다."})
 
-@router.post("/images")
+@router.post("/files")
 async def upload_image(image: UploadFile = File(...)):
     image_path = f"{UPLOAD_DIR}/{datetime.datetime.now()}{image.filename}"
     with open(image_path, "wb") as f:

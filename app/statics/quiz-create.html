@@ -53,11 +53,12 @@
             gap: 10px;
             align-items: center;
         }
-        .option-group input[type="file"] {
+        input[type="file"] {
             margin-left: 10px;
         }
-        .image-preview {
-            max-width: 100px;
+        
+        .image-preview, .video-preview, .audio-preview {
+            max-width: 50%;
             margin-top: 10px;
         }
     </style>
@@ -80,18 +81,32 @@
             <input type="text" id="question" placeholder="문제를 입력하세요">
         </div>
 
+        <div class="form-group">
+            <label for="question">메인 이미지/동영상/음성</label>
+            <input type="file" id="mainFile" accept="image/*, video/*, audio/*" onchange="previewMainMedia(event)">
+            <div id="mainMediaPreview" style="display:none;">
+                <img id="imagePreview" class="image-preview" style="display:none; max-width: 100%;">
+                <video id="videoPreview" class="video-preview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="audioPreview" class="audio-preview" style="display:none; width: 100%;" controls></audio>
+            </div>
+        </div>
+
         <!-- 주관식 문제 추가 -->
         <div id="subjectiveOptions" class="form-group" style="display:none;">
             <label for="answer">답</label>
             <input type="text" id="answer" placeholder="정답을 입력하세요">
             <label for="subjectiveImage">이미지 (주관식 문제에도 이미지 추가 가능)</label>
-            <input type="file" id="subjectiveImage" accept="image/*, video/*" onchange="previewSubjectiveImage(event)">
-            <img id="subjectiveImagePreview" class="image-preview" style="display:none;">
+            <input type="file" id="subjectiveImage" accept="image/*, video/*" onchange="previewSubjectiveMedia(event)">
+            <div id="subjectiveMediaPreview" style="display:none;">
+                <img id="imagePreview" style="display:none; max-width: 100%;">
+                <video id="videoPreview" style="display:none; max-width: 100%;" controls></video>
+                <audio id="audioPreview" style="display:none; width: 100%;" controls></audio>
+            </div>
         </div>
 
         <!-- 객관식 문제 추가 -->
         <div id="objectiveOptions" class="form-group" style="display:none;">
-            <label for="optionText">옵션들 (최대 20개)</label>
+            <label for="optionText">답 후보 (최대 20개)</label>
             <div id="options-container" class="options-container">
                 <!-- 옵션 입력란이 여기에 추가됩니다. -->
             </div>
@@ -99,7 +114,7 @@
         </div>
 
         <div class="form-group">
-            <button onclick="createQuiz()">문제 생성</button>
+            <button onclick="createQuiz()">문제 수정</button>
         </div>
     </div>
 
@@ -143,49 +158,121 @@
             optionGroup.innerHTML = `
                 <input type="text" class="optionText" placeholder="옵션을 입력하세요" required>
                 <input type="radio" name="correctOption" class="correctOption" value="${optionCount}">
-                <input type="file" class="optionImage" accept="image/*, video/*" onchange="previewImage(event, ${optionCount})">
-                <img id="imagePreview${optionCount}" class="image-preview" style="display:none;">
+                <input type="file" class="optionImage" accept="image/*, video/*" onchange="previewMedia(event, ${optionCount})">
+                <div class="MediaPreview" style="display:none;">
+                    <img id="imagePreview${optionCount}" style="display:none; max-width: 100%;">
+                    <video id="videoPreview${optionCount}" style="display:none; max-width: 100%;" controls></video>
+                    <audio id="audioPreview${optionCount}" style="display:none; width: 100%;" controls></audio>
+                </div>
             `;
             optionsContainer.appendChild(optionGroup);
             optionCount++;
         }
 
         // 주관식 이미지 미리보기
-        function previewSubjectiveImage(event) {
+        function previewSubjectiveMedia(event) {
             const file = event.target.files[0];
             const reader = new FileReader();
-            const imagePreview = document.getElementById('subjectiveImagePreview');
+            const mediaPreview = document.getElementById('subjectiveMediaPreview');
+            const imagePreview = document.getElementById('imagePreview');
+            const videoPreview = document.getElementById('videoPreview');
+            const audioPreview = document.getElementById('audioPreview');
+            
+            // 기존 미리보기 초기화
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            audioPreview.style.display = 'none';
 
             reader.onload = function() {
-                imagePreview.style.display = 'block';
-                imagePreview.src = reader.result;
+                if (file.type.startsWith('image/')) {
+                    // 이미지 파일인 경우
+                    imagePreview.style.display = 'block';
+                    imagePreview.src = reader.result;
+                } else if (file.type.startsWith('video/')) {
+                    // 비디오 파일인 경우
+                    videoPreview.style.display = 'block';
+                    videoPreview.src = reader.result;
+                } else if (file.type.startsWith('audio/')) {
+                    // 오디오 파일인 경우
+                    audioPreview.style.display = 'block';
+                    audioPreview.src = reader.result;
+                }
             };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
         }
 
         // 객관식 이미지 미리보기
-        function previewImage(event, index) {
+        function previewMedia(event, index) {
             const file = event.target.files[0];
             const reader = new FileReader();
             const imagePreview = document.getElementById(`imagePreview${index}`);
+            const videoPreview = document.getElementById(`videoPreview${index}`);
+            const audioPreview = document.getElementById(`audioPreview${index}`);
+
+            // 기존 미리보기 초기화
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            audioPreview.style.display = 'none';
 
             reader.onload = function() {
-                imagePreview.style.display = 'block';
-                imagePreview.src = reader.result;
+                if (file.type.startsWith('image/')) {
+                    // 이미지 파일인 경우
+                    imagePreview.style.display = 'block';
+                    imagePreview.src = reader.result;
+                } else if (file.type.startsWith('video/')) {
+                    // 비디오 파일인 경우
+                    videoPreview.style.display = 'block';
+                    videoPreview.src = reader.result;
+                } else if (file.type.startsWith('audio/')) {
+                    // 오디오 파일인 경우
+                    audioPreview.style.display = 'block';
+                    audioPreview.src = reader.result;
+                }
             };
+        }
 
+        // 메인 미디어 미리보기
+        function previewMainMedia(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('mainMediaPreview');
+            const imagePreview = document.getElementById('imagePreview');
+            const videoPreview = document.getElementById('videoPreview');
+            const audioPreview = document.getElementById('audioPreview');
+        
+            // 모든 미리보기 요소 숨기기
+            imagePreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            audioPreview.style.display = 'none';
+        
             if (file) {
-                reader.readAsDataURL(file);
+                const fileType = file.type.split('/')[0]; // 파일 타입 확인 (image, video, audio)
+        
+                if (fileType === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (fileType === 'video') {
+                    const url = URL.createObjectURL(file);
+                    videoPreview.src = url;
+                    videoPreview.style.display = 'block';
+                } else if (fileType === 'audio') {
+                    const url = URL.createObjectURL(file);
+                    audioPreview.src = url;
+                    audioPreview.style.display = 'block';
+                }
+        
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
             }
         }
 
-        async function uploadImage(image){
+        async function uploadFile(image){
             const formData = new FormData();
             formData.append('image', image);
-            const response = await fetch('/api/v1/manager/images', {
+            const response = await fetch('/api/v1/manager/files', {
                 method: 'POST',
                 body: formData,
             });
@@ -204,6 +291,12 @@
             formData.append('quizType', quizType);
             formData.append('question', question);
 
+            const mainFile = document.getElementById('mainFile').files[0];
+            if (mainFile) {
+                const mainFilePath = await uploadFile(mainFile);
+                formData.append('mainFilePath', mainFilePath);
+            }
+
             if (quizType === 'subjective') {
                 const answer = document.getElementById('answer').value;
                 const subjectiveImage = document.getElementById('subjectiveImage').files[0];
@@ -216,7 +309,7 @@
                 formData.append('correctAnswer', answer);
                 if (subjectiveImage) {
                     formData.append('optionsText', JSON.stringify(['']));
-                    const imagePath = await uploadImage(subjectiveImage);
+                    const imagePath = await uploadFile(subjectiveImage);
                     formData.append('optionsImagePath', JSON.stringify([imagePath]));
                 }
 
@@ -243,7 +336,7 @@
                         return;
                     }
                     if (optionImage) {
-                        const imagePath = await uploadImage(optionImage);
+                        const imagePath = await uploadFile(optionImage);
                         optionsImagePath.push(imagePath);
                     } else {
                         optionsImagePath.push('');
