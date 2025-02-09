@@ -41,6 +41,9 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd ~/quiz-moa-server
+            docker stop quiz-moa-server
+            docker rm quiz-moa-server
+            docker prune -f
             docker build -t quiz-moa-server .
             docker run --network=host -d --restart=always -v /var/tmp:/var/tmp --name quiz-moa-server quiz-moa-server
 
