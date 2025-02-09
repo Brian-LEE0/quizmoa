@@ -230,12 +230,12 @@
 
         // 문제 생성 페이지로 이동하는 함수
         function createQuizPage(topicId) {
-            window.location.href = `/quiz-create?topicId=${topicId}`;  // 문제 생성 페이지로 이동
+            window.location.href = `/quiz-create.html?topicId=${topicId}`;  // 문제 생성 페이지로 이동
         }
 
         // 문제 수정 페이지로 이동하는 함수
         function editQuiz(topicId, quizId) {
-            window.location.href = `/quiz-modify?topicId=${topicId}&quizId=${quizId}`;  // 문제 수정 페이지로 이동
+            window.location.href = `/quiz-modify.html?topicId=${topicId}&quizId=${quizId}`;  // 문제 수정 페이지로 이동
         }
 
         async function editQuizIdx(topicId, quizId) {

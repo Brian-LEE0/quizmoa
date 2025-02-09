@@ -19,7 +19,3 @@ app.include_router(manager_router, prefix="/api/v1/manager")
 
 app.include_router(statics_router)
 
-@app.get("/uploads/{image_path}")
-async def get_image(image_path: str):
-    print(image_path)
-    return FileResponse(UPLOAD_DIR + "/" + image_path)

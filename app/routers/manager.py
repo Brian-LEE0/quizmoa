@@ -73,25 +73,31 @@ async def get_quizzes(topic_id: int):
     if not topic:
         raise HTTPException(status_code=404, detail="주제를 찾을 수 없습니다.")
 
-    cursor.execute("SELECT id, idx, quiz_type, question, correct_answer FROM quizzes WHERE topic_id = ? ORDER BY idx ASC", (topic_id,))
+    cursor.execute("SELECT id, idx, quiz_type, question, correct_answer, main_file_path FROM quizzes WHERE topic_id = ? ORDER BY idx ASC", (topic_id,))
     quizzes = cursor.fetchall()
 
     quiz_list = []
     for quiz in quizzes:
-        quiz_id, idx, quiz_type, question, correct_answer = quiz
-        options = []
-
-        if quiz_type == "objective":
-            cursor.execute("SELECT text, image_path FROM options WHERE quiz_id = ?", (quiz_id,))
-            options = [{"text": row[0], "image": row[1]} for row in cursor.fetchall()]
-
+        quiz_id, idx, quiz_type, question, correct_answer, main_file_path = quiz
+        
+        
+        options_text = []
+        options_image_path = []
+        cursor.execute("SELECT text, image_path FROM options WHERE quiz_id = ?", (quiz_id,))
+        options = cursor.fetchall()
+        for option in options:
+            options_text.append(option[0])
+            options_image_path.append(option[1])
+        
         quiz_list.append({
             "id": quiz_id,
             "idx": idx,
             "quizType": quiz_type,
             "question": question,
+            "mainFilePath": main_file_path,
             "correctAnswer": correct_answer,
-            "options": options
+            "optionsText": options_text,
+            "optionsImagePath": options_image_path
         })
 
     return JSONResponse(content={"quizzes": quiz_list})

@@ -1,7 +1,9 @@
 import os
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+
+from app.routers.manager import UPLOAD_DIR
 
 router = APIRouter()
 
@@ -10,7 +12,18 @@ router = APIRouter()
 async def serve_html(
     name: str
 ):
-    # HTML 파일을 직접 반환하는 방법
     print(name)
-    html_content = open(f"app/statics/{name}.html").read()
+    if not os.path.exists(f"app/statics/{name}"):
+        return RedirectResponse(url="/topic-list.html")
+    html_content = open(f"app/statics/{name}").read()
     return HTMLResponse(content=html_content)
+
+@router.get("/uploads/{image_path}")
+async def get_image(image_path: str):
+    print(image_path)
+    return FileResponse(UPLOAD_DIR + "/" + image_path)
+
+@router.get("/")
+async def root():
+    return RedirectResponse(url="/topic-list.html")
+

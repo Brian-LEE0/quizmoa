@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장학퀴즈</title>
+    <style>
+        body {
+            font-family: "Jua", serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 100%;
+            text-align: center;
+        }
+        .quiz-container h1 {
+            font-size: 70px;
+            margin-bottom: 20px;
+        }
+        .media-container img, .media-container video, .media-container audio {
+            max-width: 100%;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .option {
+            display: flex;
+            flex-direction: column;
+            width: 15%;
+            box-sizing: border-box;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 40px;
+            padding: 10px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        .option img, .option video, .option audio {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 0 auto;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .correct-answer {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            font-weight: bold;
+            font-size: 50px;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+        }
+        .correct-option {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1 id="question">문제를 불러오는 중...</h1>
+        <div class="media-container" id="media"></div>
+        <div class="options-container" id="options"></div>
+    </div>
+
+    <script>
+        let currentQuizIndex = 0;
+        let quizzes = [];
+        let showAnswer = false;
+
+        async function fetchQuizzes() {
+            const topicId = new URLSearchParams(window.location.search).get('topicId');
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes`);
+            const data = await response.json();
+            quizzes = data.quizzes;
+            displayQuiz();
+        }
+
+        function displayQuiz() {
+            if (currentQuizIndex >= quizzes.length) {
+                document.getElementById('question').innerText = "모든 퀴즈를 완료했습니다!";
+                document.getElementById('media').innerHTML = "";
+                document.getElementById('options').innerHTML = "";
+                return;
+            }
+
+            const quiz = quizzes[currentQuizIndex];
+            document.getElementById('question').innerHTML= `<div>문제${(currentQuizIndex + 1)}<br />${quiz.question}`
+            displayMedia(quiz.mainFilePath);
+            document.getElementById('options').innerHTML = "";
+
+            if (quiz.quizType === 'objective') {
+                for (let i = 0; i < quiz.optionsText.length; i++) {
+                    const option = quiz.optionsText[i];
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.innerHTML = `<span>${i+1}. ${option}</span>`;
+                    if (quiz.optionsImagePath && quiz.optionsImagePath[i]) {
+                        displayOptionMedia(quiz.optionsImagePath[i], optionElement);
+                    }
+                    optionElement.addEventListener('click', () => {
+                        if (!showAnswer) {
+                            showCorrectAnswer(quiz);
+                        }
+                    });
+                    document.getElementById('options').appendChild(optionElement);
+                }
+            }
+
+            if (quiz.quizType === 'subjective') {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.innerHTML = `<span>주관식 문제입니다!</span>`;
+                if (quiz.optionsImagePath && quiz.optionsImagePath[0]) {
+                    displayOptionMedia(quiz.optionsImagePath[0], optionElement);
+                }
+                optionElement.addEventListener('click', () => {
+                    if (!showAnswer) {
+                        showCorrectAnswer(quiz);
+                    }
+                });
+                document.getElementById('options').appendChild(optionElement);
+            }
+        }
+
+        function displayMedia(mediaPath) {
+            const mediaContainer = document.getElementById('media');
+            mediaContainer.innerHTML = "";
+            if (mediaPath) {
+                if (mediaPath.match(/\.(jpeg|jpg|png|gif)$/)) {
+                    mediaContainer.innerHTML = `<img src="/uploads/${mediaPath}" alt="문제 이미지">`;
+                } else if (mediaPath.match(/\.(mp4|webm)$/)) {
+                    mediaContainer.innerHTML = `<video controls src="/uploads/${mediaPath}"></video>`;
+                } else if (mediaPath.match(/\.(mp3|wav)$/)) {
+                    mediaContainer.innerHTML = `<audio controls src="/uploads/${mediaPath}"></audio>`;
+                }
+            }
+        }
+
+        function displayOptionMedia(mediaPath, container) {
+            if (mediaPath) {
+                if (mediaPath.match(/\.(jpeg|jpg|png|gif)$/)) {
+                    container.innerHTML += `<img src="/uploads/${mediaPath}" alt="옵션 이미지">`;
+                } else if (mediaPath.match(/\.(mp4|webm)$/)) {
+                    container.innerHTML += `<video controls src="/uploads/${mediaPath}"></video>`;
+                } else if (mediaPath.match(/\.(mp3|wav)$/)) {
+                    container.innerHTML += `<audio controls src="/uploads/${mediaPath}"></audio>`;
+                }
+            }
+        }
+
+        function showCorrectAnswer(quiz) {
+            const correctAnswerElement = document.createElement('div');
+            correctAnswerElement.className = 'correct-answer';
+            correctAnswerElement.innerText = `정답: ${quiz.correctAnswer}`;
+            document.getElementById('options').appendChild(correctAnswerElement);
+        
+            // 객관식 문제일 경우 정답 옵션의 스타일 변경
+            if (quiz.quizType === 'objective') {
+                const options = document.querySelectorAll('.option');
+                options.forEach((option, index) => {
+                    if (index === quiz.correctAnswer - 1) { // 정답 인덱스가 1부터 시작한다고 가정
+                        option.classList.add('correct-option');
+                    }
+                });
+            }
+        
+            showAnswer = true;
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' || event.code === 'ArrowRight') {
+                if (showAnswer) {
+                    currentQuizIndex++;
+                    showAnswer = false;
+                    displayQuiz();
+                } else {
+                    const quiz = quizzes[currentQuizIndex];
+                    showCorrectAnswer(quiz);
+                }
+            } else if (event.code === 'ArrowLeft' && currentQuizIndex > 0) {
+                currentQuizIndex--;
+                showAnswer = false;
+                displayQuiz();
+            }
+        });
+
+        fetchQuizzes();
+    </script>
+</body>
+</html>

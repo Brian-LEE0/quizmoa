@@ -364,7 +364,7 @@
             const data = await response.json();
             if (response.ok) {
                 alert('문제가 성공적으로 생성되었습니다.');
-                window.location.href = '/topic-management?topicId=' + topicId;
+                window.location.href = '/topic-management.html?topicId=' + topicId;
             } else {
                 alert(data.detail || '문제 생성에 실패했습니다.');
             }
