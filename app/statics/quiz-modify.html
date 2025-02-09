@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문제 수정</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            width: 60%;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .option-group input[type="file"] {
+            margin-left: 10px;
+        }
+        .image-preview {
+            max-width: 100px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>문제 수정</h1>
+
+        <div class="form-group">
+            <label for="quizType">문제 유형</label>
+            <select id="quizType">
+                <option value="subjective">주관식</option>
+                <option value="objective">객관식</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="question">질문</label>
+            <input type="text" id="question" placeholder="문제를 입력하세요">
+        </div>
+
+        <!-- 주관식 문제 추가 -->
+        <div id="subjectiveOptions" class="form-group" style="display:none;">
+            <label for="answer">답</label>
+            <input type="text" id="answer" placeholder="정답을 입력하세요">
+            <label for="subjectiveImage">이미지 (주관식 문제에도 이미지 추가 가능)</label>
+            <input type="file" id="subjectiveImage" accept="image/*, video/*" onchange="previewSubjectiveMedia(event)">
+            <img id="subjectiveImagePreview" class="image-preview" style="display:none;">
+        </div>
+
+        <!-- 객관식 문제 추가 -->
+        <div id="objectiveOptions" class="form-group" style="display:none;">
+            <label for="optionText">옵션들 (최대 20개)</label>
+            <div id="options-container" class="options-container">
+                <!-- 옵션 입력란이 여기에 추가됩니다. -->
+            </div>
+            <button type="button" onclick="addOption()">옵션 추가</button>
+        </div>
+
+        <div class="form-group">
+            <button onclick="createQuiz()">문제 수정</button>
+        </div>
+    </div>
+
+    <script>
+        let optionCount = 0; // 옵션 입력란의 개수를 추적합니다.
+
+        // 문제 유형 변경 시 옵션 섹션 표시 여부 설정
+        document.getElementById('quizType').addEventListener('change', function() {
+            const quizType = this.value;
+            if (quizType === 'objective') {
+                document.getElementById('objectiveOptions').style.display = 'block';
+                document.getElementById('subjectiveOptions').style.display = 'none';
+            } else {
+                document.getElementById('subjectiveOptions').style.display = 'block';
+                document.getElementById('objectiveOptions').style.display = 'none';
+            }
+        });
+
+        // 페이지 로드 시 문제 유형에 맞는 필드 보이기
+        window.addEventListener('load', function() {
+            const quizType = document.getElementById('quizType').value;
+            if (quizType === 'subjective') {
+                document.getElementById('subjectiveOptions').style.display = 'block';
+                document.getElementById('objectiveOptions').style.display = 'none';
+            } else {
+                document.getElementById('subjectiveOptions').style.display = 'none';
+                document.getElementById('objectiveOptions').style.display = 'block';
+            }
+        });
+
+        // 객관식 옵션 추가
+        function addOption() {
+            if (optionCount >= 20) {
+                alert('최대 20개의 옵션만 추가할 수 있습니다.');
+                return;
+            }
+
+            const optionsContainer = document.getElementById('options-container');
+            const optionGroup = document.createElement('div');
+            optionGroup.classList.add('option-group');
+            optionGroup.innerHTML = `
+                <input type="text" class="optionText" placeholder="옵션을 입력하세요" required>
+                <input type="radio" name="correctOption" class="correctOption" value="${optionCount}">
+                <input type="file" class="optionImage" accept="image/*, video/*" onchange="previewMedia(event, ${optionCount})">
+                <img id="imagePreview${optionCount}" class="image-preview" style="display:none;">
+            `;
+            optionsContainer.appendChild(optionGroup);
+            optionCount++;
+        }
+
+        // 주관식 이미지 미리보기
+        function previewSubjectiveMedia(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            const mediaPreview = document.getElementById('subjectiveMediaPreview');
+            const videoPreview = document.getElementById('subjectiveVideoPreview');
+        
+            // 기존 미리보기 초기화
+            mediaPreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+        
+            reader.onload = function() {
+                if (file.type.startsWith('image/')) {
+                    // 이미지 파일인 경우
+                    mediaPreview.style.display = 'block';
+                    mediaPreview.src = reader.result;
+                } else if (file.type.startsWith('video/')) {
+                    // 비디오 파일인 경우
+                    videoPreview.style.display = 'block';
+                    videoPreview.src = reader.result;
+                }
+            };
+        
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 객관식 이미지 미리보기
+        function previewMedia(event, index) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            const mediaPreview = document.getElementById(`mediaPreview${index}`);
+            const videoPreview = document.getElementById(`videoPreview${index}`);
+        
+            // 기존 미리보기 초기화
+            mediaPreview.style.display = 'none';
+            videoPreview.style.display = 'none';
+        
+            reader.onload = function() {
+                if (file.type.startsWith('image/')) {
+                    // 이미지 파일인 경우
+                    mediaPreview.style.display = 'block';
+                    mediaPreview.src = reader.result;
+                } else if (file.type.startsWith('video/')) {
+                    // 비디오 파일인 경우
+                    videoPreview.style.display = 'block';
+                    videoPreview.src = reader.result;
+                }
+            };
+        
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function uploadImage(image){
+            const formData = new FormData();
+            formData.append('image', image);
+            const response = await fetch('/api/v1/manager/images', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            return data.image_path;
+        }
+
+        // 문제 생성 함수
+        async function createQuiz() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const topicId = urlParams.get('topicId');
+            const quizType = document.getElementById('quizType').value;
+            const question = document.getElementById('question').value;
+            const formData = new FormData();
+
+            formData.append('quizType', quizType);
+            formData.append('question', question);
+
+            if (quizType === 'subjective') {
+                const answer = document.getElementById('answer').value;
+                const subjectiveImage = document.getElementById('subjectiveImage').files[0];
+
+                if (!answer) {
+                    alert('답을 입력해주세요.');
+                    return;
+                }
+
+                formData.append('correctAnswer', answer);
+                if (subjectiveImage) {
+                    formData.append('optionsText', JSON.stringify(['']));
+                    const imagePath = await uploadImage(subjectiveImage);
+                    formData.append('optionsImagePath', JSON.stringify([imagePath]));
+                }
+
+            } else if (quizType === 'objective') {
+                const options = document.querySelectorAll('.optionText');
+                const correctOption = document.querySelector('input[name="correctOption"]:checked');
+                const optionImages = document.querySelectorAll('.optionImage');
+
+                if (!correctOption) {
+                    alert('정답을 선택해주세요.');
+                    return;
+                }
+
+                const optionsText = [];
+                const optionsImagePath = [];
+
+                for (let i = 0; i < options.length; i++) {
+                    const option = options[i].value;
+                    optionsText.push(option);
+
+                    const optionImage = optionImages[i].files[0];
+                    if (!option) {
+                        alert('옵션을 입력해주세요.');
+                        return;
+                    }
+                    if (optionImage) {
+                        const imagePath = await uploadImage(optionImage);
+                        optionsImagePath.push(imagePath);
+                    } else {
+                        optionsImagePath.push('');
+                    }
+
+                }
+
+                formData.append('correctAnswer', options[correctOption.value].value);
+                formData.append('optionsText', JSON.stringify(optionsText));
+                formData.append('optionsImagePath', JSON.stringify(optionsImagePath));
+            }
+
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes`, {
+                method: 'PUT',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('문제가 성공적으로 생성되었습니다.');
+                //window.location.href = '/topic-management';  // 주제 관리 페이지로 돌아가기
+            } else {
+                alert(data.detail || '문제 생성에 실패했습니다.');
+            }
+        }
+
+        async function init(topicId, quizId) {
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes/${quizId}`);
+            const data = await response.json();
+            console.log(data);
+            if (response.ok) {
+                const quiz = data;
+                document.getElementById('quizType').value = quiz.quizType;
+                document.getElementById('question').value = quiz.question;
+
+                if (quiz.quizType === 'subjective') {
+                    document.getElementById('answer').value = quiz.correctAnswer;
+                    if (quiz.optionsImagePath) {
+                        const imagePreview = document.getElementById('subjectiveImagePreview');
+                        imagePreview.style.display = 'block';
+                        imagePreview.src = quiz.optionsImagePath[0]
+                    }
+                } else if (quiz.quizType === 'objective') {
+                    for (let i = 0; i < quiz.optionsText.length; i++) {
+                        addOption();
+                        document.querySelectorAll('.optionText')[i].value = quiz.optionsText[i];
+                        if (quiz.correctAnswer === quiz.optionsText[i]) {
+                            document.querySelectorAll('.correctOption')[i].checked = true;
+                        }
+                        if (quiz.optionsImagePath[i]) {
+                            const imagePreview = document.getElementById(`imagePreview${i}`);
+                            imagePreview.style.display = 'block';
+                            imagePreview.src = quiz.optionsImagePath[i];
+                        }
+                    }
+                }
+            } else {
+                alert(data.detail || '문제 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const topicId = urlParams.get('topicId');
+        const quizId = urlParams.get('quizId');
+
+        init(topicId, quizId);
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주제 관리</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            width: 60%;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .topic-list {
+            margin-top: 30px;
+        }
+        .topic-list table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .topic-list th, .topic-list td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .topic-list th {
+            background-color: #f8f9fa;
+        }
+        .quiz-list {
+            margin-top: 20px;
+        }
+        .quiz-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .quiz-list th, .quiz-list td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .quiz-list th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>주제 관리</h1>
+
+        <!-- 주제 추가 폼 -->
+        <div class="form-group">
+            <label for="topicName">새 주제 생성</label>
+            <input type="text" id="topicName" placeholder="주제 이름을 입력하세요">
+            <button onclick="createTopic()">주제 생성</button>
+        </div>
+
+        <!-- 주제 리스트 -->
+        <div class="topic-list">
+            <h2>현재 생성된 주제 목록</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>주제 ID</th>
+                        <th>주제 이름</th>
+                        <th>문제 보기</th>
+                        <th>문제 생성하기</th>
+                        <!-- <th>삭제</th> -->
+                    </tr>
+                </thead>
+                <tbody id="topicListBody">
+                    <!-- 주제 리스트가 동적으로 여기에 추가됩니다. -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 문제 리스트 -->
+        <div class="quiz-list" id="quizList">
+            <h2>문제 목록</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>문제 ID</th>
+                        <th>문제 우선순위</th>
+                        <th>문제 유형</th>
+                        <th>질문</th>
+                        <th>정답</th>
+                        <th>수정</th>
+                        <th>삭제</th>
+                    </tr>
+                </thead>
+                <tbody id="quizListBody">
+                    <!-- 문제 리스트가 동적으로 여기에 추가됩니다. -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 주제 리스트를 서버에서 가져오는 함수
+        async function getTopics() {
+            const response = await fetch('/api/v1/manager/topics');
+            const data = await response.json();
+
+            const topicListBody = document.getElementById('topicListBody');
+            topicListBody.innerHTML = '';
+
+            data.topics.forEach(topic => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${topic.id}</td>
+                    <td>${topic.name}</td>
+                    <td><button onclick="getQuizzes(${topic.id})">문제 보기</button></td>
+                    <td><button onclick="createQuizPage(${topic.id})">문제 생성하기</button></td>
+                    <!-- <td><button onclick="deleteTopic(${topic.id})">삭제</button></td> -->
+                `;
+                topicListBody.appendChild(row);
+            });
+        }
+
+        // 문제 리스트를 서버에서 가져오는 함수
+        async function getQuizzes(topicId) {
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes`);
+            const data = await response.json();
+
+            const quizListBody = document.getElementById('quizListBody');
+            const quizList = document.getElementById('quizList');
+            quizListBody.innerHTML = '';
+
+            if (data.quizzes && data.quizzes.length > 0) {
+                data.quizzes.forEach(quiz => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${quiz.id}</td>
+                        <td>${quiz.idx} <button onclick="editQuizIdx(${topicId}, ${quiz.id})">변경</button></td>
+                        <td>${quiz.quizType}</td>
+                        <td>${quiz.question}</td>
+                        <td>${quiz.correctAnswer}</td>
+                        <td><button onclick="editQuiz(${topicId}, ${quiz.id})">수정</button></td>
+                        <td><button onclick="deleteQuiz(${topicId}, ${quiz.id})">삭제</button></td>
+                    `;
+                    quizListBody.appendChild(row);
+                });
+                quizList.style.display = 'block';  // 문제 목록을 보이게
+            } 
+            else {
+                //quizList.style.display = 'none';  // 문제 목록이 없으면 숨기기 -->
+                alert('이 주제에는 문제가 없습니다.');
+            }
+        }
+
+        // 주제 생성 함수
+        async function createTopic() {
+            const topicName = document.getElementById('topicName').value;
+            if (!topicName) {
+                alert('주제 이름을 입력해주세요.');
+                return;
+            }
+
+            const response = await fetch('/api/v1/manager/topics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: topicName })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('주제가 성공적으로 생성되었습니다.');
+                document.getElementById('topicName').value = '';  // 입력란 초기화
+                getTopics();  // 주제 리스트 갱신
+            } else {
+                alert(data.detail || '주제 생성에 실패했습니다.');
+            }
+        }
+
+        // 주제 삭제 함수
+        async function deleteTopic(topicId) {
+            const response = await fetch(`/api/v1/manager/topics/${topicId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('주제가 성공적으로 삭제되었습니다.');
+                getTopics();  // 삭제 후 주제 리스트 갱신
+            } else {
+                alert(data.detail || '주제 삭제에 실패했습니다.');
+            }
+        }
+
+        // 문제 생성 페이지로 이동하는 함수
+        function createQuizPage(topicId) {
+            window.location.href = `/quiz-create?topicId=${topicId}`;  // 문제 생성 페이지로 이동
+        }
+
+        // 문제 수정 페이지로 이동하는 함수
+        function editQuiz(topicId, quizId) {
+            window.location.href = `/quiz-modify?topicId=${topicId}&quizId=${quizId}`;  // 문제 수정 페이지로 이동
+        }
+
+        async function editQuizIdx(topicId, quizId) {
+            const idx = prompt('변경할 우선순위를 입력하세요.');
+            if (!idx) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('idx', idx);
+
+            const response = await fetch(`/api/v1/manager/topics/${topicId}/quizzes/${quizId}`, {
+                method: 'PATCH',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('문제 우선순위가 성공적으로 변경되었습니다.');
+                getQuizzes(topicId);  // 변경 후 문제 리스트 갱신
+            } else {
+                alert(data.detail || '문제 우선순위 변경에 실패했습니다.');
+            }
+        }
+
+        async function deleteQuiz(topicId, quizId) {
+            if (!confirm('정말로 삭제하시겠습니까?')) {
+                return;
+            }
+
+            const res = await fetch(`/api/v1/manager/topics/${topicId}/quizzes/${quizId}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                alert('문제가 성공적으로 삭제되었습니다.');
+                await getQuizzes(topicId);  // 삭제 후 문제 리스트 갱신
+            } else {
+                const data = await res.json();
+                alert(data.detail || '문제 삭제에 실패했습니다.');
+            }
+        }
+
+        // 페이지 로드 시 주제 리스트를 가져옴
+        window.onload = function() {
+            getTopics();
+        };
+    </script>
+
+</body>
+</html>
