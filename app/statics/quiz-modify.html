@@ -441,7 +441,7 @@
                     document.getElementById('subjectiveOptions').style.display = 'block';
                     document.getElementById('objectiveOptions').style.display = 'none';
                 }
-                
+
                 document.getElementById('question').value = quiz.question;
 
                 if (quiz.mainFilePath) {
@@ -514,14 +514,14 @@
 
                 if (quiz.quizType === 'subjective') {
                     document.getElementById('answer').value = quiz.correctAnswer;
-                    if (quiz.optionsImagePath) {
+                    if (quiz.optionsImagePath && quiz.optionsImagePath[0]) {
                         const subjectiveMediaPreview = document.getElementById('subjectiveMediaPreview');
                         const imagePreview = document.getElementById('subjectiveImagePreview');
                         const videoPreview = document.getElementById('subjectiveVideoPreview');
                         const audioPreview = document.getElementById('subjectiveAudioPreview');
 
                         subjectiveMediaPreview.style.display = 'block';
-                        const response = await fetch("/uploads/" +quiz.optionsImagePath[0]);
+                        const response = await fetch("/uploads/" + quiz.optionsImagePath[0]);
                         const blob = await response.blob();
                         const fileName = quiz.optionsImagePath[0].split('/').pop();  // 파일 이름 추출
 
@@ -554,6 +554,9 @@
                         document.querySelectorAll('.optionText')[i].value = quiz.optionsText[i];
                         if (quiz.correctAnswer === quiz.optionsText[i]) {
                             document.querySelectorAll('.correctOption')[i].checked = true;
+                        }
+                        if (quiz.optionsImagePath[i] === '') {
+                            continue;
                         }
 
                         const response = await fetch("/uploads/" +quiz.optionsImagePath[i]);
