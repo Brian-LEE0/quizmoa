@@ -434,6 +434,14 @@
             if (response.ok) {
                 const quiz = data;
                 document.getElementById('quizType').value = quiz.quizType;
+                if (quiz.quizType === 'objective') {
+                    document.getElementById('objectiveOptions').style.display = 'block';
+                    document.getElementById('subjectiveOptions').style.display = 'none';
+                } else {
+                    document.getElementById('subjectiveOptions').style.display = 'block';
+                    document.getElementById('objectiveOptions').style.display = 'none';
+                }
+                
                 document.getElementById('question').value = quiz.question;
 
                 if (quiz.mainFilePath) {
