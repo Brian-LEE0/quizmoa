@@ -466,13 +466,15 @@
                     const mainFile = document.getElementById('mainFile');
                     mainFile.files = dataTransfer.files;
 
-                    if (quiz.mainFilePath.endsWith('.jpg') || quiz.mainFilePath.endsWith('.jpeg') || quiz.mainFilePath.endsWith('.png')) {
+                    const contentType = response.headers.get('Content-Type');
+
+                    if (contentType.startsWith('image')) {
                         imagePreview.style.display = 'block';
                         imagePreview.src = URL.createObjectURL(file);
-                    } else if (quiz.mainFilePath.endsWith('.mp4') || quiz.mainFilePath.endsWith('.webm')) {
+                    } else if (contentType.startsWith('video')) {
                         videoPreview.style.display = 'block';
                         videoPreview.src = URL.createObjectURL(file);
-                    } else if (quiz.mainFilePath.endsWith('.mp3') || quiz.mainFilePath.endsWith('.wav')) {
+                    } else if (contentType.startsWith('audio')) {
                         audioPreview.style.display = 'block';
                         audioPreview.src = URL.createObjectURL(file);
                     }
@@ -500,13 +502,15 @@
                     const answerMainFile = document.getElementById('answerMainFile');
                     answerMainFile.files = dataTransfer.files;
 
-                    if (quiz.answerMainFilePath.endsWith('.jpg') || quiz.answerMainFilePath.endsWith('.jpeg') || quiz.answerMainFilePath.endsWith('.png')) {
+                    const contentType = response.headers.get('Content-Type');
+
+                    if (contentType.startsWith('image')) {
                         answerImagePreview.style.display = 'block';
                         answerImagePreview.src = URL.createObjectURL(file);
-                    } else if (quiz.answerMainFilePath.endsWith('.mp4') || quiz.answerMainFilePath.endsWith('.webm')) {
+                    } else if (contentType.startsWith('video')) {
                         answerVideoPreview.style.display = 'block';
                         answerVideoPreview.src = URL.createObjectURL(file);
-                    } else if (quiz.answerMainFilePath.endsWith('.mp3') || quiz.answerMainFilePath.endsWith('.wav')) {
+                    } else if (contentType.startsWith('audio')) {
                         answerAudioPreview.style.display = 'block';
                         answerAudioPreview.src = URL.createObjectURL(file);
                     }
@@ -536,17 +540,18 @@
                         const subjectiveImage = document.getElementById('subjectiveImage');
                         subjectiveImage.files = dataTransfer.files;
 
-                        if (quiz.optionsImagePath[0].endsWith('.jpg') || quiz.optionsImagePath[0].endsWith('.jpeg') || quiz.optionsImagePath[0].endsWith('.png')) {
+                        const contentType = response.headers.get('Content-Type');
+
+                        if (contentType.startsWith('image')) {
                             imagePreview.style.display = 'block';
                             imagePreview.src = URL.createObjectURL(file);
-                        } else if (quiz.optionsImagePath[0].endsWith('.mp4') || quiz.optionsImagePath[0].endsWith('.webm')) {
+                        } else if (contentType.startsWith('video')) {
                             videoPreview.style.display = 'block';
                             videoPreview.src = URL.createObjectURL(file);
-                        } else if (quiz.optionsImagePath[0].endsWith('.mp3') || quiz.optionsImagePath[0].endsWith('.wav')) {
+                        } else if (contentType.startsWith('audio')) {
                             audioPreview.style.display = 'block';
                             audioPreview.src = URL.createObjectURL(file);
                         }
-
                     }
                 } else if (quiz.quizType === 'objective') {
                     for (let i = 0; i < quiz.optionsText.length; i++) {
@@ -578,13 +583,15 @@
                         const videoPreview = document.getElementById(`videoPreview${i}`);
                         const audioPreview = document.getElementById(`audioPreview${i}`);
 
-                        if (quiz.optionsImagePath[i].endsWith('.jpg') || quiz.optionsImagePath[i].endsWith('.jpeg') || quiz.optionsImagePath[i].endsWith('.png')) {
+                        const contentType = response.headers.get('Content-Type');
+
+                        if (contentType.startsWith('image')) {
                             imagePreview.style.display = 'block';
                             imagePreview.src = URL.createObjectURL(file);
-                        } else if (quiz.optionsImagePath[i].endsWith('.mp4') || quiz.optionsImagePath[i].endsWith('.webm')) {
+                        } else if (contentType.startsWith('video')) {
                             videoPreview.style.display = 'block';
                             videoPreview.src = URL.createObjectURL(file);
-                        } else if (quiz.optionsImagePath[i].endsWith('.mp3') || quiz.optionsImagePath[i].endsWith('.wav')) {
+                        } else if (contentType.startsWith('audio')) {
                             audioPreview.style.display = 'block';
                             audioPreview.src = URL.createObjectURL(file);
                         }

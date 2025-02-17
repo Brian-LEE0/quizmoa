@@ -152,28 +152,57 @@
             }
         }
 
-        function displayMedia(mediaPath) {
+        async function displayMedia(mediaPath) {
             const mediaContainer = document.getElementById('media');
             mediaContainer.innerHTML = "";
+            
             if (mediaPath) {
-                if (mediaPath.match(/\.(jpeg|jpg|png|gif|webp|svg|bmp|ico|tiff|tif)$/)) {
-                    mediaContainer.innerHTML = `<img src="/uploads/${mediaPath}" alt="문제 이미지">`;
-                } else if (mediaPath.match(/\.(mp4|webm|mov|avi|mkv)$/)) {
-                    mediaContainer.innerHTML = `<video controls src="/uploads/${mediaPath}"></video>`;
-                } else if (mediaPath.match(/\.(mp3|wav)$/)) {
-                    mediaContainer.innerHTML = `<audio controls src="/uploads/${mediaPath}"></audio>`;
+                try {
+                    const response = await fetch(`/uploads/${mediaPath}`);
+                    const contentType = response.headers.get('Content-Type');
+        
+                    if (contentType.startsWith('image/')) {
+                        mediaContainer.innerHTML = `<img src="/uploads/${mediaPath}" alt="문제 이미지">`;
+                    } else if (contentType.startsWith('video/')) {
+                        mediaContainer.innerHTML = `<video controls src="/uploads/${mediaPath}"></video>`;
+                    } else if (contentType.startsWith('audio/')) {
+                        mediaContainer.innerHTML = `<audio controls src="/uploads/${mediaPath}"></audio>`;
+                    } else {
+                        console.log('지원되지 않는 미디어 타입입니다.');
+                    }
+                } catch (error) {
+                    console.error('미디어 로딩 중 오류 발생:', error);
                 }
             }
         }
 
-        function displayOptionMedia(mediaPath, container) {
+        async function displayOptionMedia(mediaPath, container) {
             if (mediaPath) {
-                if (mediaPath.match(/\.(jpeg|jpg|png|gif|webp|svg|bmp|ico|tiff|tif)$/)) {
-                    container.innerHTML += `<img src="/uploads/${mediaPath}" alt="옵션 이미지">`;
-                } else if (mediaPath.match(/\.(mp4|webm|mov|avi|mkv)$/)) {
-                    container.innerHTML += `<video controls src="/uploads/${mediaPath}"></video>`;
-                } else if (mediaPath.match(/\.(mp3|wav)$/)) {
-                    container.innerHTML += `<audio controls src="/uploads/${mediaPath}"></audio>`;
+                try {
+                    const response = await fetch(`/uploads/${mediaPath}`);
+                    const contentType = response.headers.get('Content-Type');
+        
+                    let mediaElement;
+                    if (contentType.startsWith('image/')) {
+                        mediaElement = document.createElement('img');
+                        mediaElement.src = `/uploads/${mediaPath}`;
+                        mediaElement.alt = "옵션 이미지";
+                    } else if (contentType.startsWith('video/')) {
+                        mediaElement = document.createElement('video');
+                        mediaElement.src = `/uploads/${mediaPath}`;
+                        mediaElement.controls = true;
+                    } else if (contentType.startsWith('audio/')) {
+                        mediaElement = document.createElement('audio');
+                        mediaElement.src = `/uploads/${mediaPath}`;
+                        mediaElement.controls = true;
+                    } else {
+                        console.log('지원되지 않는 미디어 타입입니다.');
+                        return;
+                    }
+        
+                    container.appendChild(mediaElement);
+                } catch (error) {
+                    console.error('미디어 로딩 중 오류 발생:', error);
                 }
             }
         }
