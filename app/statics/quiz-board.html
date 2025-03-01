@@ -83,10 +83,23 @@
             border-color: #c3e6cb;
             color: #155724;
         }
+
+        .before-answer {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            font-weight: bold;
+            font-size: 3vh;
+            padding: 1vh;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
+    <div class="quiz-container" id="quiz-container">
         <h1 id="question">문제를 불러오는 중...</h1>
         <div class="media-container" id="media"></div>
         <div class="options-container" id="options"></div>
@@ -95,6 +108,7 @@
     <script>
         let currentQuizIndex = 0;
         let quizzes = [];
+        let showBeforeAnswer = false;
         let showAnswer = false;
         let curOptionsCount = 0;
         let curOptionsAll = 0;
@@ -133,11 +147,6 @@
                     if (quiz.optionsImagePath && quiz.optionsImagePath[i]) {
                         displayOptionMedia(quiz.optionsImagePath[i], optionElement);
                     }
-                    optionElement.addEventListener('click', () => {
-                        if (!showAnswer) {
-                            showCorrectAnswer(quiz);
-                        }
-                    });
                     document.getElementById('options').appendChild(optionElement);
                 }
             }
@@ -151,11 +160,6 @@
                 if (quiz.optionsImagePath && quiz.optionsImagePath[0]) {
                     displayOptionMedia(quiz.optionsImagePath[0], optionElement);
                 }
-                optionElement.addEventListener('click', () => {
-                    if (!showAnswer) {
-                        showCorrectAnswer(quiz);
-                    }
-                });
                 document.getElementById('options').appendChild(optionElement);
             }
         }
@@ -215,7 +219,19 @@
             }
         }
 
+        function displayBeforeAnswer(quiz) {
+            const beforeAnswerElement = document.createElement('div');
+            beforeAnswerElement.className = 'before-answer';
+            beforeAnswerElement.innerText = '정답을 확인하려면 스페이스바를 눌러주세요.';
+            document.getElementById('options').appendChild(beforeAnswerElement);
+        
+            showBeforeAnswer = true;
+        }
+
         function showCorrectAnswer(quiz) {
+
+            document.getElementsByClassName('before-answer')[0].remove();
+
             const correctAnswerElement = document.createElement('div');
             correctAnswerElement.className = 'correct-answer';
             correctAnswerElement.innerText = `정답: ${quiz.correctAnswer}`;
@@ -225,7 +241,7 @@
         
             // 객관식 문제일 경우 정답 옵션의 스타일 변경
             if (quiz.quizType === 'objective') {
-                const options = document.querySelectorAll('.option');
+                const options = document.querySelectorAll('.option'); 
                 options.forEach((option, idx) => {
                     if (quiz.correctAnswer === quiz.optionsText[idx]) {
                         option.classList.add('correct-option');
@@ -238,19 +254,24 @@
 
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space' || event.code === 'ArrowRight') {
-                if (curOptionsCount < curOptionsAll) {
+                if (curOptionsCount === curOptionsAll) {
+                    displayBeforeAnswer(quizzes[currentQuizIndex]);
+                    curOptionsCount++;
+                } else if (curOptionsCount < curOptionsAll) {
                     document.querySelectorAll('.option')[curOptionsCount].style.display = 'block';
                     curOptionsCount++;
                 }else if (showAnswer) {
                     currentQuizIndex++;
+                    showBeforeAnswer = false;
                     showAnswer = false;
                     displayQuiz();
-                } else {
+                }else{
                     const quiz = quizzes[currentQuizIndex];
                     showCorrectAnswer(quiz);
                 }
             } else if (event.code === 'ArrowLeft' && currentQuizIndex > 0) {
                 currentQuizIndex--;
+                showBeforeAnswer = false;
                 showAnswer = false;
                 displayQuiz();
             }
