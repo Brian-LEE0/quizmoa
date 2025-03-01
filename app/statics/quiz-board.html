@@ -28,7 +28,7 @@
         }
         .quiz-container h1 {
             font-size: 4vh;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .media-container img, .media-container video, .media-container audio {
             height: 45vh;
@@ -39,7 +39,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         .option {
             display: flex;
@@ -51,17 +51,17 @@
             border-radius: 8px;
             font-size: 2.5vh;
             padding: 1vh;
-            margin: 2vh;
+            margin: 1vh;
             cursor: pointer;
             transition: background-color 0.3s;
             text-align: center;
         }
-        .option:hover {
+        .options:hover {
             background-color: #e0e0e0;
         }
         .option img, .option video, .option audio {
-            max-width: 100%;
-            max-height: 10vh;
+            max-width: 15vh;
+            height: 15vh;
             margin: 0 auto;
             margin-top: 10px;
             border-radius: 4px;
@@ -96,6 +96,8 @@
         let currentQuizIndex = 0;
         let quizzes = [];
         let showAnswer = false;
+        let curOptionsCount = 0;
+        let curOptionsAll = 0;
 
         async function fetchQuizzes() {
             const topicId = new URLSearchParams(window.location.search).get('topicId');
@@ -119,11 +121,15 @@
             document.getElementById('options').innerHTML = "";
 
             if (quiz.quizType === 'objective') {
+                curOptionsAll = quiz.optionsText.length;
+                curOptionsCount = 0;
+
                 for (let i = 0; i < quiz.optionsText.length; i++) {
                     const option = quiz.optionsText[i];
                     const optionElement = document.createElement('div');
                     optionElement.className = 'option';
                     optionElement.innerHTML = `<span>${i+1}. ${option}</span>`;
+                    optionElement.style.display = 'none';
                     if (quiz.optionsImagePath && quiz.optionsImagePath[i]) {
                         displayOptionMedia(quiz.optionsImagePath[i], optionElement);
                     }
@@ -137,6 +143,8 @@
             }
 
             if (quiz.quizType === 'subjective') {
+                curOptionsAll = 0;
+                curOptionsCount = 0;
                 const optionElement = document.createElement('div');
                 optionElement.className = 'option';
                 optionElement.innerHTML = `<span>주관식 문제입니다!</span>`;
@@ -230,7 +238,10 @@
 
         document.addEventListener('keydown', (event) => {
             if (event.code === 'Space' || event.code === 'ArrowRight') {
-                if (showAnswer) {
+                if (curOptionsCount < curOptionsAll) {
+                    document.querySelectorAll('.option')[curOptionsCount].style.display = 'block';
+                    curOptionsCount++;
+                }else if (showAnswer) {
                     currentQuizIndex++;
                     showAnswer = false;
                     displayQuiz();
